@@ -170,11 +170,12 @@ const Navbar = () => {
   );
 };
 
-const ServiceCard = ({ icon: Icon, title, items, isSoftware }: { icon: any, title: string, items: string[], isSoftware: boolean }) => {
+const ServiceCard = ({ icon: Icon, title, items, isSoftware, onClick }: { icon: any, title: string, items: string[], isSoftware: boolean, onClick?: () => void }) => {
   return (
     <motion.div 
       whileHover={{ y: -5 }}
-      className="p-8 rounded-2xl card-immersive group"
+      onClick={onClick}
+      className={`p-8 rounded-2xl card-immersive group cursor-pointer ${onClick ? "" : "pointer-events-none"}`}
     >
       <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-6 bg-slate-900 border border-brand-accent/30 group-hover:border-brand-accent transition-colors`}>
         <Icon size={32} className="text-brand-accent" strokeWidth={1.5} />
@@ -194,6 +195,89 @@ const ServiceCard = ({ icon: Icon, title, items, isSoftware }: { icon: any, titl
         Saber mais <ArrowRight size={16} />
       </button>
     </motion.div>
+  );
+};
+
+const ServiceDetailsOverlay = ({ isOpen, onClose, service }: { isOpen: boolean, onClose: () => void, service: any }) => {
+  if (!service) return null;
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-6"
+        >
+          <motion.div 
+            className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl"
+            onClick={onClose}
+          />
+          
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            className="w-full max-w-4xl bg-slate-900 border border-white/10 rounded-[40px] p-8 md:p-16 relative z-10 overflow-y-auto max-h-[90vh]"
+          >
+            <button 
+              onClick={onClose}
+              className="absolute top-8 right-8 text-slate-400 hover:text-white transition-colors"
+            >
+              <Settings className="rotate-45" size={32} />
+            </button>
+
+            <div className="flex items-center gap-6 mb-12">
+              <div className="w-20 h-20 rounded-2xl bg-brand-accent flex items-center justify-center text-slate-950">
+                <service.icon size={40} />
+              </div>
+              <div>
+                <span className="text-brand-accent font-bold text-sm uppercase tracking-widest">{service.category}</span>
+                <h2 className="text-4xl font-bold">{service.title}</h2>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-12">
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-xl font-bold mb-4 text-white">Visão Geral</h3>
+                  <p className="text-slate-400 leading-relaxed font-light">
+                    {service.description}
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
+                  <h3 className="text-xl font-bold text-white">Principais Áreas</h3>
+                  {service.details.map((detail: string, idx: number) => (
+                    <div key={idx} className="flex gap-4 items-start">
+                      <div className="w-2 h-2 rounded-full bg-brand-accent mt-2 flex-shrink-0" />
+                      <p className="text-slate-300 text-sm">{detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-slate-950/50 rounded-3xl p-8 border border-white/5 h-fit">
+                <h3 className="text-xl font-bold mb-6 text-white text-center underline underline-offset-8 decoration-brand-accent">Inovação CC-Software</h3>
+                <div className="space-y-6 mb-10">
+                  {service.points.map((point: any, idx: number) => (
+                    <div key={idx} className="flex border-b border-white/5 pb-4 last:border-0 last:pb-0 gap-4">
+                      <div className="text-brand-accent">
+                        <Activity size={20} />
+                      </div>
+                      <p className="text-xs text-slate-400 italic">"{point}"</p>
+                    </div>
+                  ))}
+                </div>
+                
+                <ContactSelector title="Solicitar este Serviço:" serviceName={service.title} />
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
@@ -224,57 +308,183 @@ const DirectorCard = ({ name, role, photo, whatsapp, education }: { name: string
   );
 };
 
+const managers = [
+  {
+    name: "Alberto Macaia",
+    role: "Director Geral",
+    photo: "https://lh3.googleusercontent.com/d/11-4V6S5R9CNWrB8qvpUk2HSIgp3ZCPBM",
+    whatsapp: "+33 7 53 37 47 96"
+  },
+  {
+    name: "Jaime de Paulo",
+    role: "Director Executivo",
+    photo: "https://lh3.googleusercontent.com/d/1jv7HMLwlLgbGJl_cvficJuJHG-AHATO9",
+    whatsapp: "+244 939785068"
+  }
+];
+
+const ContactSelector = ({ title = "Falar com um Gestor:", serviceName = "" }: { title?: string, serviceName?: string }) => {
+  return (
+    <div className="space-y-4">
+      <p className="text-white font-bold text-sm uppercase tracking-widest text-center decoration-brand-accent underline underline-offset-4 mb-4">{title}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {managers.map((manager, idx) => (
+          <a
+            key={idx}
+            href={`https://wa.me/${manager.whatsapp.replace(/\+/g, '').replace(/\s/g, '')}?text=${encodeURIComponent(`Olá ${manager.name}, gostaria de solicitar informações sobre o serviço ${serviceName ? `de ${serviceName}` : 'da CC-Software'}.`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 p-4 rounded-2xl bg-slate-950 border border-white/5 hover:border-brand-accent transition-all group"
+          >
+            <img src={manager.photo} alt={manager.name} className="w-12 h-12 rounded-full object-cover border border-white/10 group-hover:border-brand-accent" referrerPolicy="no-referrer" />
+            <div className="text-left">
+              <p className="text-white text-xs font-bold">{manager.name}</p>
+              <p className="text-brand-accent text-[10px] uppercase font-bold tracking-tighter">{manager.role}</p>
+            </div>
+            <div className="ml-auto text-[#25D366]">
+              <Activity size={16} className="animate-pulse" />
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
+  const [selectedService, setSelectedService] = useState<any>(null);
+
+  const servicesData = {
+    web: {
+      category: "Software",
+      title: "Desenvolvimento Web",
+      icon: Terminal,
+      description: "Construímos pontes digitais entre o seu negócio e os seus clientes. Nossas aplicações web são focadas em performance, escalabilidade e uma UX imbatível.",
+      details: [
+        "Aplicações SPA (Single Page Applications) ultra-rápidas.",
+        "Integração contínua com serviços de Cloud Architecture.",
+        "Design Responsivo adaptado a qualquer dispositivo.",
+        "Segurança de dados com protocolos de criptografia de ponta."
+      ],
+      points: [
+          "Código limpo seguindo as diretrizes SOLID.",
+          "Foco em métricas reais de conversão.",
+          "Suporte 24/7 para sistemas críticos."
+      ]
+    },
+    automation: {
+      category: "Software",
+      title: "Sistemas & Automação",
+      icon: Database,
+      description: "Transformamos o caos operacional em fluidez digital. Automatizamos processos repetitivos para que a sua equipa possa focar no que realmente importa.",
+      details: [
+        "Sistemas ERP customizados para o mercado angolano.",
+        "Pipelines de dados inteligentes e dashboards em tempo real.",
+        "Integração de APIs de terceiros (Pagamentos, Logística).",
+        "Bots de IA para atendimento e triagem de clientes."
+      ],
+      points: [
+          "Redução de custos operacionais em até 40%.",
+          "Eliminação total de erros manuais em inventários.",
+          "Sincronização multiplataforma instantânea."
+      ]
+    },
+    maint: {
+      category: "Hardware",
+      title: "Manutenção Hardware",
+      icon: Settings,
+      description: "O pulsar físico da sua tecnologia merece cuidado de engenharia. Revitalizamos e otimizamos o seu parque de hardware para máxima longevidade.",
+      details: [
+        "Manutenção preditiva em servidores e estações de trabalho.",
+        "Reparação eletrónica a nível de componente (Micro-soldadura).",
+        "Upgrades estratégicos para prolongar a vida útil do equipamento.",
+        "Gestão técnica de ativos e inventário tecnológico."
+      ],
+      points: [
+          "Peças originais com garantia certificada.",
+          "Tempo de resposta recorde para paragens críticas.",
+          "Relatórios técnicos detalhados pós-intervenção."
+      ]
+    },
+    infra: {
+      category: "Hardware",
+      title: "Redes & Infraestrutura",
+      icon: Network,
+      description: "Desenhamos as autoestradas por onde viajam os seus dados. Criamos redes robustas, seguras e prontas para o crescimento do seu negócio.",
+      details: [
+        "Implementação de Redes Estruturadas (Fiber, Cat6).",
+        "Configuração avançada de Servidores Locais e Híbridos.",
+        "Soluções de WI-FI empresarial de alta densidade.",
+        "Firewalls e sistemas físicos de segurança de perímetro."
+      ],
+      points: [
+          "Redundância total para garantir zero downtime.",
+          "Monitorização remota 24 horas por dia.",
+          "Escalabilidade modular sem troca de arquitetura."
+      ]
+    }
+  };
+
   return (
     <div className="min-h-screen font-sans selection:bg-brand-accent selection:text-slate-950">
       <MatrixBackground />
       <div className="bg-immersive-glow" />
       <Navbar />
 
+      <ServiceDetailsOverlay 
+        isOpen={!!selectedService} 
+        onClose={() => setSelectedService(null)} 
+        service={selectedService}
+      />
+
       {/* Hero Section */}
-      <section id="home" className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-brand-accent text-sm font-medium mb-8"
-          >
-            <Activity size={14} className="animate-pulse" />
-            Líderes em Inovação Tecnológica
-          </motion.div>
-          
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-6xl md:text-8xl font-bold tracking-tight mb-8"
-          >
-            CC <span className="text-brand-accent">-</span> Software
-          </motion.h1>
-          
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-xl opacity-60 font-light tracking-wide max-w-2xl mx-auto mb-10"
-          >
-            “O seu conforto é a nossa maior satisfação.”
-          </motion.p>
-          
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
-          >
-            <a href="#servicos" className="px-8 py-4 bg-brand-accent text-slate-950 font-bold rounded-full hover:shadow-[0_0_30px_rgba(74,222,128,0.4)] transition-all">
-              Explorar Serviços
-            </a>
-            <a href="#contacto" className="px-8 py-4 border border-white/20 hover:bg-white/5 font-bold rounded-full transition-all tracking-tight">
-              Contactar Equipa
-            </a>
-          </motion.div>
+      <section id="home" className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden flex items-center justify-center min-h-[80vh]">
+        <div className="max-w-5xl mx-auto px-6 relative z-10 w-full text-center">
+          <div className="border border-brand-secondary/40 p-12 md:p-24 rounded-sm relative">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-brand-accent text-sm font-medium mb-8"
+            >
+              <Activity size={14} className="animate-pulse" />
+              Líderes em Inovação Tecnológica
+            </motion.div>
+            
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-6xl md:text-9xl font-bold tracking-tighter mb-8 flex items-center justify-center gap-6"
+            >
+              <span>CC</span>
+              <span className="w-12 h-4 md:w-20 md:h-6 bg-brand-accent inline-block rounded-sm" />
+              <span>Software</span>
+            </motion.h1>
+            
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-xl md:text-2xl opacity-80 font-light tracking-wide max-w-2xl mx-auto mb-12"
+            >
+              “O seu conforto é a nossa maior satisfação.”
+            </motion.p>
+            
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center"
+            >
+              <a href="#servicos" className="px-10 py-4 bg-brand-accent text-slate-950 font-bold rounded-3xl hover:shadow-[0_0_30px_rgba(74,222,128,0.4)] transition-all">
+                Explorar Serviços
+              </a>
+              <a href="#contacto" className="px-10 py-4 border border-brand-secondary/20 bg-brand-dark/40 text-white font-bold rounded-3xl transition-all tracking-tight hover:border-brand-secondary">
+                Contactar Equipa
+              </a>
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -299,12 +509,14 @@ export default function App() {
                 title="Desenvolvimento Web"
                 items={["Aplicações Modernas", "Sistemas Cloud", "E-commerce"]}
                 isSoftware={true}
+                onClick={() => setSelectedService(servicesData.web)}
               />
               <ServiceCard 
                 icon={Database}
                 title="Sistemas & Automação"
                 items={["ERP Customizados", "APIs Escaláveis", "Automação de Processos"]}
                 isSoftware={true}
+                onClick={() => setSelectedService(servicesData.automation)}
               />
             </div>
             {/* Hardware Group */}
@@ -314,12 +526,14 @@ export default function App() {
                 title="Manutenção Hardware"
                 items={["Reparação Avançada", "Upgrade de Sistemas", "Diagnóstico Preciso"]}
                 isSoftware={false}
+                onClick={() => setSelectedService(servicesData.maint)}
               />
               <ServiceCard 
                 icon={Network}
                 title="Redes & Infra"
                 items={["Instalação de Redes", "Segurança de Dados", "Servidores Locais"]}
                 isSoftware={false}
+                onClick={() => setSelectedService(servicesData.infra)}
               />
             </div>
           </div>
@@ -456,8 +670,17 @@ export default function App() {
                   <label className="text-xs font-bold uppercase tracking-widest opacity-40 ml-4">Mensagem</label>
                   <textarea rows={4} className="w-full bg-slate-900/50 border border-white/10 rounded-2xl px-6 py-4 focus:border-brand-accent transition-colors outline-none resize-none" placeholder="Como podemos ajudar?" />
                 </div>
-                <button className="w-full bg-brand-accent text-slate-950 font-bold py-6 rounded-2xl hover:shadow-[0_0_30px_rgba(74,222,128,0.4)] transition-all uppercase tracking-tighter">
-                  Enviar Mensagem
+                
+                <div className="pt-4 border-t border-white/5">
+                  <ContactSelector title="Iniciar conversa agora:" />
+                </div>
+
+                <div className="text-center">
+                  <span className="text-slate-500 text-[10px] uppercase font-bold tracking-widest">— OU USE O FORMULÁRIO —</span>
+                </div>
+
+                <button className="w-full bg-slate-900 border border-white/10 text-white font-bold py-6 rounded-2xl hover:border-brand-accent transition-all uppercase tracking-tighter">
+                  Enviar Mensagem via Email
                 </button>
               </form>
             </div>
